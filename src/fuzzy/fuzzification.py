@@ -26,12 +26,30 @@ class StdIntensitySet:
 
 class AspectRatioSet:
     class Values(Enum):
-        BIGGER_WIDTH=0
+        BIGGER_HEIGH=0
         SAME=1
-        BIGGER_HEIGH=2
+        BIGGER_WIDTH=2
+
+    VARIANCE = 0.5
 
     def __init__(self, value):
-        pass
+        self.low = self.bigger_heigh_mf(value)
+        self.medium = self.same_mf(value)
+        self.high = self.bigger_width_mf(value)
+
+
+    def bigger_heigh_mf(self, value):
+        return np.exp(-((value**2)/(2*self.VARIANCE**2)))
+
+
+    def same_mf(self, value):
+        center = self.Values.SAME
+        return np.exp(-(((value-center)**2)/(2*self.VARIANCE**2)))
+    
+
+    def bigger_width_mf(self, value):
+        center = self.Values.BIGGER_WIDTH
+        return np.exp(-(((value-center)**2)/(2*self.VARIANCE**2)))
 
 
 
@@ -75,7 +93,7 @@ class SymmetrySet:
 
 
 
-class VerticalProjectionVarianceSet:
+class ProjectionVarianceSet:
     class Values(Enum):
         LOW=0
         MEDIUM=1
@@ -86,11 +104,29 @@ class VerticalProjectionVarianceSet:
 
 
 
-class HorizontalProjectionVarianceSet:
+class LoopSet:
     class Values(Enum):
-        LOW=0
-        MEDIUM=1
-        HIGH=2
+        ZERO=0
+        ONE=1
+        TWO=2
+
+    VARIANCE = 0.5
 
     def __init__(self, value):
-        pass
+        self.zero = self.zero_mf(value)
+        self.one = self.one_mf(value)
+        self.two = self.two_mf(value)
+
+
+    def zero_mf(self, value):
+        return np.exp(-((value**2)/(2*self.VARIANCE**2)))
+
+
+    def one_mf(self, value):
+        center = self.Values.ONE
+        return np.exp(-(((value-center)**2)/(2*self.VARIANCE**2)))
+    
+
+    def two_mf(self, value):
+        center = self.Values.TWO
+        return np.exp(-(((value-center)**2)/(2*self.VARIANCE**2)))

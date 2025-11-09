@@ -1,9 +1,6 @@
 import cv2
 import numpy as np
 from dataclasses import dataclass, field
-from skimage.measure import euler_number, label
-from skimage import measure, morphology, filters
-from scipy import ndimage as ndi
 
 IMG_SIZE = 28
 THRESHOLD = 255.0
@@ -58,6 +55,7 @@ def _symmetry(img) -> tuple[float, float]:
 
 
 def _projection_variance(img) -> tuple[float, float]:
+    img = np.array(~(img > 128), float)
     horiz_proj = np.var(np.sum(img, axis=1))
     vert_proj = np.var(np.sum(img, axis=0))
     return (horiz_proj, vert_proj)
