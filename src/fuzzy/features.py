@@ -63,26 +63,25 @@ def _projection_variance(img) -> tuple[float, float]:
     return (horiz_proj, vert_proj)
 
 
-def _holes(img, threshold=64) -> int:
-    # Step 2: Binarize (foreground white, background black)
-    _, binary = cv2.threshold(img, threshold, 255, cv2.THRESH_BINARY)
+def _holes(img) -> int:
+    img = img.astype(np.uint8)
+    _, binary = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY)
 
-    # Step 3: Find contours and hierarchy
-    # cv2.RETR_TREE gives full hierarchy
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # Invert (digit = white, background = black)
+    inverted = cv2.bitwise_not(binary)
 
-    num_holes = 0
+    # Find connected components
+    num_labels, labels = cv2.connectedComponents(inverted)
 
-    if hierarchy is not None:
-        hierarchy = hierarchy[0]  # shape (num_contours, 4)
-        # Each element is [Next, Previous, First_Child, Parent]
-        # Holes are contours that have a parent contour (Parent != -1)
-        for i, h in enumerate(hierarchy):
-            parent = h[3]
-            if parent != -1:
-                num_holes += 1
+    # Background label (outer) touches border
+    # We find all labels touching the border and exclude them.
+    border_labels = np.unique(np.concatenate([
+        labels[0, :], labels[-1, :], labels[:, 0], labels[:, -1]
+    ]))
 
-    return num_holes
+    # Count holes: all labels minus border components and background
+    hole_labels = [l for l in range(1, num_labels) if l not in border_labels]
+    return len(hole_labels)
 
 
 def extract_fuzzy_features(img, grid_size=DEFAULT_GRID_SIZE) -> Features:
