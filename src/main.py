@@ -12,12 +12,15 @@ min_val = 1000
 f_min = None
 f_max = None
 img = None
-print(x_train.shape, len(features), y_labels.shape)
 for i,f in enumerate(features):
     if f.holes > max_val:
         f_max = y_labels[i]
         img = x_train[i]
-    min_val = min(min_val, f.aspect_ratio)
-    max_val = max(max_val, f.aspect_ratio)
+    min_val = min(min_val, f.vertical_projection_variance)
+    max_val = max(max_val, f.vertical_projection_variance)
 
 print(max_val, min_val)
+
+test = np.full((28,28), 255)
+f = extract_fuzzy_features(test)
+print(f.vertical_projection_variance)

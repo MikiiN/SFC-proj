@@ -3,7 +3,7 @@ import numpy as np
 from dataclasses import dataclass, field
 
 IMG_SIZE = 28
-THRESHOLD = 255.0
+THRESHOLD = 128
 DEFAULT_GRID_SIZE = 4
 
 
@@ -15,14 +15,14 @@ class Features:
     zone_intensity: list[float] = field(default_factory=list)
     horizontal_symmetry: float = 0.0
     vertical_symmetry: float = 0.0
-    horizontal_projection_variance: float = 0.0
-    vertical_projection_variance: float = 0.0
+    # horizontal_projection_variance: float = 0.0
+    # vertical_projection_variance: float = 0.0
     holes: int = 0
 
 
 def _global_features(img) -> tuple[float, float]:
-    mean_intensity = np.mean(img)
-    std_intensity = np.std(img)
+    mean_intensity = np.mean(img)/10
+    std_intensity = np.std(img)/10
     return (mean_intensity, std_intensity)
 
 
@@ -54,16 +54,16 @@ def _symmetry(img) -> tuple[float, float]:
     return (h_sym, v_sym)
 
 
-def _projection_variance(img) -> tuple[float, float]:
-    img = np.array(~(img > 128), float)
-    horiz_proj = np.var(np.sum(img, axis=1))
-    vert_proj = np.var(np.sum(img, axis=0))
-    return (horiz_proj, vert_proj)
+# def _projection_variance(img) -> tuple[float, float]:
+#     img = np.array(~(img > THRESHOLD), float)
+#     horiz_proj = np.var(np.sum(img, axis=1))
+#     vert_proj = np.var(np.sum(img, axis=0))
+#     return (horiz_proj, vert_proj)
 
 
 def _holes(img) -> int:
     img = img.astype(np.uint8)
-    _, binary = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(img, THRESHOLD, 255, cv2.THRESH_BINARY)
 
     # Invert (digit = white, background = black)
     inverted = cv2.bitwise_not(binary)
@@ -102,7 +102,7 @@ def extract_fuzzy_features(img, grid_size=DEFAULT_GRID_SIZE) -> Features:
 
     features.horizontal_symmetry, features.vertical_symmetry = _symmetry(img) 
     
-    features.horizontal_projection_variance, features.vertical_projection_variance = _projection_variance(img)
+    # features.horizontal_projection_variance, features.vertical_projection_variance = _projection_variance(img)
 
     features.holes = _holes(img)
     
