@@ -17,6 +17,11 @@ class LogicOperator(Enum):
 
 
 class Rule:
-    def __init__(self, conditions: list, result: int):
+    def __init__(self, conditions: list[Condition], result: int):
         self.conditions = conditions
         self.result = result
+
+    
+    @staticmethod
+    def from_string(cls, string: str):
+        pass

@@ -1,5 +1,6 @@
 import numpy as np 
 from dataclasses import dataclass
+from enum import Enum
 
 @dataclass
 class SetsInputValues:
@@ -7,6 +8,19 @@ class SetsInputValues:
     variance: float = 0.0
     lower_bound: float = 0.0
     upper_bound: float = 0.0
+
+
+
+class FuzzyValues(Enum):
+    LOW = 0
+    MEDIUM = 1
+    HIGH = 2
+    BIGGER_HEIGH = 3
+    SAME = 4
+    BIGGER_WIDTH = 5
+    ZERO = 6
+    ONE = 7
+    TWO = 8
 
 
 
@@ -40,9 +54,9 @@ class FuzzySet:
 
 class MeanIntensitySet(FuzzySet):
     DEFAULT_VALUES = {
-        "low": SetsInputValues(0, 5, 0, 13),
-        "medium": SetsInputValues(13, 5, 0, 25),
-        "high": SetsInputValues(25, 5, 13, 25)
+        FuzzyValues.LOW: SetsInputValues(0, 5, 0, 13),
+        FuzzyValues.MEDIUM: SetsInputValues(13, 5, 0, 25),
+        FuzzyValues.HIGH: SetsInputValues(25, 5, 13, 25)
     }
 
 
@@ -53,9 +67,9 @@ class MeanIntensitySet(FuzzySet):
 
 class StdIntensitySet(FuzzySet):
     DEFAULT_VALUES = {
-        "low": SetsInputValues(0, 5, 0, 13),
-        "medium": SetsInputValues(13, 5, 0, 25),
-        "high": SetsInputValues(25, 5, 13, 25)
+        FuzzyValues.LOW: SetsInputValues(0, 5, 0, 13),
+        FuzzyValues.MEDIUM: SetsInputValues(13, 5, 0, 25),
+        FuzzyValues.HIGH: SetsInputValues(25, 5, 13, 25)
     }
 
 
@@ -66,9 +80,9 @@ class StdIntensitySet(FuzzySet):
 
 class AspectRatioSet(FuzzySet):
     DEFAULT_VALUES = {
-        "bigger_heigh": SetsInputValues(0, 0.5, 0, 1),
-        "same": SetsInputValues(1, 0.5, 0, 2),
-        "bigger_width": SetsInputValues(2, 0.5, 1, 2)
+        FuzzyValues.BIGGER_HEIGH: SetsInputValues(0, 0.5, 0, 1),
+        FuzzyValues.SAME: SetsInputValues(1, 0.5, 0, 2),
+        FuzzyValues.BIGGER_WIDTH: SetsInputValues(2, 0.5, 1, 2)
     }
 
 
@@ -79,9 +93,9 @@ class AspectRatioSet(FuzzySet):
 
 class ZoneIntensitySet(FuzzySet):
     DEFAULT_VALUES = {
-        "low": SetsInputValues(0, 5, 0, 13),
-        "medium": SetsInputValues(13, 5, 0, 25),
-        "high": SetsInputValues(25, 5, 13, 25)
+        FuzzyValues.LOW: SetsInputValues(0, 5, 0, 13),
+        FuzzyValues.MEDIUM: SetsInputValues(13, 5, 0, 25),
+        FuzzyValues.HIGH: SetsInputValues(25, 5, 13, 25)
     }
 
 
@@ -92,9 +106,9 @@ class ZoneIntensitySet(FuzzySet):
 
 class SymmetrySet(FuzzySet):
     DEFAULT_VALUES = {
-        "low": SetsInputValues(0, 0.25, 0, 0.5),
-        "medium": SetsInputValues(0.5, 0.25, 0, 1),
-        "high": SetsInputValues(1, 0.25, 0.5, 1)
+        FuzzyValues.LOW: SetsInputValues(0, 0.25, 0, 0.5),
+        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25, 0, 1),
+        FuzzyValues.HIGH: SetsInputValues(1, 0.25, 0.5, 1)
     }
 
 
@@ -103,11 +117,11 @@ class SymmetrySet(FuzzySet):
 
 
 
-class LoopSet(FuzzySet):
+class HoleSet(FuzzySet):
     DEFAULT_VALUES = {
-        "low": SetsInputValues(0, 0.5, 0, 1),
-        "medium": SetsInputValues(1, 0.5, 0, 2),
-        "high": SetsInputValues(2, 0.5, 1, 2)
+        FuzzyValues.ZERO: SetsInputValues(0, 0.5, 0, 1),
+        FuzzyValues.ONE: SetsInputValues(1, 0.5, 0, 2),
+        FuzzyValues.TWO: SetsInputValues(2, 0.5, 1, 2)
     }
 
 
