@@ -1,16 +1,5 @@
-from dataclasses import dataclass
-from enum import Enum
-
 import src.fuzzy.fuzzy_sets as fsets
 from src.fuzzy.fuzzy_sets import FuzzySet, FuzzyValues
-
-
-class Condition:
-    def __init__(self, set: FuzzySet, value: FuzzyValues):
-        self.set = set
-        self.value = value
-        self.bound = set.get_upper_bound(value)
-
 
 
 class Rule:
@@ -47,7 +36,7 @@ class Rule:
         solidity: fsets.SoliditySet,
         h_symmetry: fsets.SymmetrySet,
         v_symmetry: fsets.SymmetrySet,
-        holes: fsets.HoleSet
+        holes: fsets.HolesSet
     ):
         set_list = [
             centroid,
@@ -76,7 +65,16 @@ class Rule:
         for con in parts:
             conditions.append(fsets.FuzzyValues.from_string(con))
         return cls(result_number, *conditions)
-        
+
+
+    @classmethod
+    def from_list(cls, lst: list[int]):
+        result_number = lst[-1:][0]
+        lst = lst[:-1]
+        conditions = []
+        for con in lst:
+            conditions.append(fsets.FuzzyValues(con))
+        return cls(result_number, *conditions)    
 
 
     def __str__(self):
@@ -84,3 +82,11 @@ class Rule:
         for cond in self.conditions:
             string += f"{str(cond)},"
         string += str(self.result_number)
+    
+
+    def __list__(self):
+        result = []
+        for condition in self.conditions:
+            result.append(condition.value)
+        result.append(self.result_number)
+        return result

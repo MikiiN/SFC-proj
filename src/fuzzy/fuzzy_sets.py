@@ -11,28 +11,20 @@ class SetsInputValues:
 
 
 class FuzzyValues(Enum):
+    IRRELEVANT= -1
     LOW = 0
     MEDIUM = 1
     HIGH = 2
-    IRRELEVANT= 3
 
 
     @classmethod
     def from_string(cls, value: str):
-        value_lower = value.lower().replace(" ", "")
-        match value_lower:
-            case "low":
-                return cls.LOW
-            case "medium":
-                return cls.MEDIUM
-            case "high":
-                return cls.HIGH  
-            case "irrelevant":
-                return cls.IRRELEVANT       
-
+        value = value.replace(" ", "")
+        return cls(int(value))
+          
 
     def __str__(self):
-        return self.name   
+        return self.value   
 
 
 
@@ -134,7 +126,7 @@ class SymmetrySet(FuzzySet):
 
 
 
-class HoleSet(FuzzySet):
+class HolesSet(FuzzySet):
     DEFAULT_VALUES = {
         FuzzyValues.LOW: SetsInputValues(0, 0.5),
         FuzzyValues.MEDIUM: SetsInputValues(1, 0.5),
