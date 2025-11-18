@@ -1,51 +1,33 @@
 import cv2
 import numpy as np
 from dataclasses import dataclass, field
+from skimage.measure import label, regionprops
 
 IMG_SIZE = 28
 THRESHOLD = 128
-DEFAULT_GRID_SIZE = 4
 
 
 @dataclass
 class Features:
-    mean_intensity: float = 0.0
-    std_intensity: float = 0.0
+    centroid: float = 0.0
     aspect_ratio: float = 0.0
-    zone_intensity: list[float] = field(default_factory=list)
+    extent: float = 0.0
+    solidity: float = 0.0
     horizontal_symmetry: float = 0.0
     vertical_symmetry: float = 0.0
-    # horizontal_projection_variance: float = 0.0
-    # vertical_projection_variance: float = 0.0
     holes: int = 0
 
 
-def _global_features(img) -> tuple[float, float]:
-    mean_intensity = np.mean(img)/10
-    std_intensity = np.std(img)/10
-    return (mean_intensity, std_intensity)
+def _centroids(img, props) -> float:
+    cy, _ = props.centroid
+    return cy / img.shape[0] 
 
 
-def _aspect_ratio(img) -> float:
-    rows, cols = np.where(img > 0.2)
-    if len(rows) > 0:
-        height = rows.max() - rows.min() + 1
-        width = cols.max() - cols.min() + 1
-        aspect_ratio = width / height
-    else:
-        aspect_ratio = 1.0
-    return aspect_ratio
-
-
-def _zone_intensity(img, grid_size) -> list[float]:
-    result = []
-    zone_h = img.shape[0] // grid_size
-    zone_w = img.shape[1] // grid_size
-    for i in range(grid_size):
-        for j in range(grid_size):
-            zone = img[i*zone_h:(i+1)*zone_h, j*zone_w:(j+1)*zone_w]
-            result.append(np.mean(zone))
-    return result
+def _aspect_ratio(props) -> float:
+    min_r, min_c, max_r, max_c = props.bbox
+    height = max_r - min_r
+    width = max_c - min_c
+    return width / height if height > 0 else 0
 
 
 def _symmetry(img) -> tuple[float, float]:
@@ -54,22 +36,16 @@ def _symmetry(img) -> tuple[float, float]:
     return (h_sym, v_sym)
 
 
-# def _projection_variance(img) -> tuple[float, float]:
-#     img = np.array(~(img > THRESHOLD), float)
-#     horiz_proj = np.var(np.sum(img, axis=1))
-#     vert_proj = np.var(np.sum(img, axis=0))
-#     return (horiz_proj, vert_proj)
+def _solidity(regions) -> float:
+    if not regions:
+        return 0.0
+    digit = max(regions, key=lambda r: r.area)
+    return digit.solidity
 
 
 def _holes(img) -> int:
-    img = img.astype(np.uint8)
-    _, binary = cv2.threshold(img, THRESHOLD, 255, cv2.THRESH_BINARY)
-
-    # Invert (digit = white, background = black)
-    inverted = cv2.bitwise_not(binary)
-
     # Find connected components
-    num_labels, labels = cv2.connectedComponents(inverted)
+    num_labels, labels = cv2.connectedComponents(img)
 
     # Background label (outer) touches border
     # We find all labels touching the border and exclude them.
@@ -82,28 +58,24 @@ def _holes(img) -> int:
     return len(hole_labels)
 
 
-def extract_fuzzy_features(img, grid_size=DEFAULT_GRID_SIZE) -> Features:
-    """
-    Extract fuzzy-friendly interpretable features from a single MNIST image.
-    Input:
-        img: 28x28 numpy array (grayscale 0–1)
-        grid_size: number of zones per side 
-    Output:
-        feature vector (list of floats)
-    """
+def extract_fuzzy_features(img) -> Features:
     features = Features()
-    
-    features.mean_intensity, features.std_intensity = _global_features(img)
-    
-    features.aspect_ratio = _aspect_ratio(img)
-    
-    # --- Zoning features (mean intensity in each zone) ---
-    features.zone_intensity = _zone_intensity(img, grid_size)
-
+    features.holes = _holes(img)
     features.horizontal_symmetry, features.vertical_symmetry = _symmetry(img) 
     
-    # features.horizontal_projection_variance, features.vertical_projection_variance = _projection_variance(img)
-
-    features.holes = _holes(img)
+    binary_img = np.array(img > THRESHOLD, dtype=np.uint8)
+    labeled_img = label(binary_img)
+    
+    # Get properties (assuming the digit is the largest region)
+    regions = regionprops(labeled_img)
+    if not regions:
+        return None # Empty image
+    
+    props = regions[0] # Take the first region found
+    
+    features.centroid = _centroids(binary_img, props)
+    features.aspect_ratio = _aspect_ratio(props)
+    features.extent = props.extent
+    features.solidity = _solidity(regions)
     
     return features

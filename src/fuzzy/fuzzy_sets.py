@@ -2,12 +2,11 @@ import numpy as np
 from dataclasses import dataclass
 from enum import Enum
 
+
 @dataclass
 class SetsInputValues:
-    value: float = 0.0
+    center: float = 0.0
     variance: float = 0.0
-    lower_bound: float = 0.0
-    upper_bound: float = 0.0
 
 
 
@@ -15,12 +14,25 @@ class FuzzyValues(Enum):
     LOW = 0
     MEDIUM = 1
     HIGH = 2
-    BIGGER_HEIGH = 3
-    SAME = 4
-    BIGGER_WIDTH = 5
-    ZERO = 6
-    ONE = 7
-    TWO = 8
+    IRRELEVANT= 3
+
+
+    @classmethod
+    def from_string(cls, value: str):
+        value_lower = value.lower().replace(" ", "")
+        match value_lower:
+            case "low":
+                return cls.LOW
+            case "medium":
+                return cls.MEDIUM
+            case "high":
+                return cls.HIGH  
+            case "irrelevant":
+                return cls.IRRELEVANT       
+
+
+    def __str__(self):
+        return self.name   
 
 
 
@@ -28,14 +40,19 @@ class FuzzySet:
     def __init__(self, value, sets_values: dict[SetsInputValues]):
         self.sets_values = sets_values
         self.mf_values = {}
+        self.mf_params = {}
         for name, set_val in self.sets_values.items():
-            self.mf_values[name] = self.membership_function(
+            v = FuzzyValues.from_string(name)
+            self.mf_values[v] = self.membership_function(
                 value,
-                set_val.value,
-                set_val.variance,
-                set_val.lower_bound,
-                set_val.upper_bound
+                set_val.center,
+                set_val.variance
             )
+            self.mf_params[v] = set_val
+
+    
+    def get_upper_bound(self, value: FuzzyValues):
+        return self.mf_values[value]
 
     
     def membership_function(
@@ -43,33 +60,20 @@ class FuzzySet:
         value: float, 
         center: float, 
         variance: float,
-        lower_bound: float,
-        upper_bound: float
     ) -> float:
-        if value < lower_bound or value > upper_bound:
-            return 0.0
-        return np.exp(-(((value-center)**2)/(2*variance**2)))
+       lower_bound = center - variance
+       upper_bound = center + variance
+       rising = (value - lower_bound) / (center - lower_bound)
+       falling = (upper_bound - value) / (upper_bound - center)
+       return max(min(rising, falling), 0.0)
 
 
 
-class MeanIntensitySet(FuzzySet):
+class CentroidSet(FuzzySet):
     DEFAULT_VALUES = {
-        FuzzyValues.LOW: SetsInputValues(0, 5, 0, 13),
-        FuzzyValues.MEDIUM: SetsInputValues(13, 5, 0, 25),
-        FuzzyValues.HIGH: SetsInputValues(25, 5, 13, 25)
-    }
-
-
-    def __init__(self, value, sets_values: dict[SetsInputValues] = DEFAULT_VALUES):
-        super().__init__(value, sets_values)
-
-
-
-class StdIntensitySet(FuzzySet):
-    DEFAULT_VALUES = {
-        FuzzyValues.LOW: SetsInputValues(0, 5, 0, 13),
-        FuzzyValues.MEDIUM: SetsInputValues(13, 5, 0, 25),
-        FuzzyValues.HIGH: SetsInputValues(25, 5, 13, 25)
+        FuzzyValues.LOW: SetsInputValues(0, 0.25),
+        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25),
+        FuzzyValues.HIGH: SetsInputValues(1, 0.25)
     }
 
 
@@ -80,9 +84,9 @@ class StdIntensitySet(FuzzySet):
 
 class AspectRatioSet(FuzzySet):
     DEFAULT_VALUES = {
-        FuzzyValues.BIGGER_HEIGH: SetsInputValues(0, 0.5, 0, 1),
-        FuzzyValues.SAME: SetsInputValues(1, 0.5, 0, 2),
-        FuzzyValues.BIGGER_WIDTH: SetsInputValues(2, 0.5, 1, 2)
+        FuzzyValues.LOW: SetsInputValues(0, 0.25),
+        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25),
+        FuzzyValues.HIGH: SetsInputValues(1, 0.25)
     }
 
 
@@ -91,11 +95,24 @@ class AspectRatioSet(FuzzySet):
 
 
 
-class ZoneIntensitySet(FuzzySet):
+class ExtentSet(FuzzySet):
     DEFAULT_VALUES = {
-        FuzzyValues.LOW: SetsInputValues(0, 5, 0, 13),
-        FuzzyValues.MEDIUM: SetsInputValues(13, 5, 0, 25),
-        FuzzyValues.HIGH: SetsInputValues(25, 5, 13, 25)
+        FuzzyValues.LOW: SetsInputValues(0, 0.25),
+        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25),
+        FuzzyValues.HIGH: SetsInputValues(1, 0.25)
+    }
+
+
+    def __init__(self, value, sets_values: dict[SetsInputValues] = DEFAULT_VALUES):
+        super().__init__(value, sets_values)
+
+
+
+class SoliditySet(FuzzySet):
+    DEFAULT_VALUES = {
+        FuzzyValues.LOW: SetsInputValues(0, 0.25),
+        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25),
+        FuzzyValues.HIGH: SetsInputValues(1, 0.25)
     }
 
 
@@ -106,9 +123,9 @@ class ZoneIntensitySet(FuzzySet):
 
 class SymmetrySet(FuzzySet):
     DEFAULT_VALUES = {
-        FuzzyValues.LOW: SetsInputValues(0, 0.25, 0, 0.5),
-        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25, 0, 1),
-        FuzzyValues.HIGH: SetsInputValues(1, 0.25, 0.5, 1)
+        FuzzyValues.LOW: SetsInputValues(0, 0.25),
+        FuzzyValues.MEDIUM: SetsInputValues(0.5, 0.25),
+        FuzzyValues.HIGH: SetsInputValues(1, 0.25)
     }
 
 
@@ -119,9 +136,9 @@ class SymmetrySet(FuzzySet):
 
 class HoleSet(FuzzySet):
     DEFAULT_VALUES = {
-        FuzzyValues.ZERO: SetsInputValues(0, 0.5, 0, 1),
-        FuzzyValues.ONE: SetsInputValues(1, 0.5, 0, 2),
-        FuzzyValues.TWO: SetsInputValues(2, 0.5, 1, 2)
+        FuzzyValues.LOW: SetsInputValues(0, 0.5),
+        FuzzyValues.MEDIUM: SetsInputValues(1, 0.5),
+        FuzzyValues.HIGH: SetsInputValues(2, 0.5)
     }
 
 
@@ -132,16 +149,16 @@ class HoleSet(FuzzySet):
 
 class NumberSet(FuzzySet):
     DEFAULT_VALUES = {
-        0: SetsInputValues(0, 0.5, 0, 1),
-        1: SetsInputValues(1, 0.5, 0, 2),
-        2: SetsInputValues(2, 0.5, 1, 3),
-        3: SetsInputValues(3, 0.5, 2, 4),
-        4: SetsInputValues(4, 0.5, 3, 5),
-        5: SetsInputValues(5, 0.5, 4, 6),
-        6: SetsInputValues(6, 0.5, 5, 7),
-        7: SetsInputValues(7, 0.5, 6, 8),
-        8: SetsInputValues(8, 0.5, 7, 9),
-        9: SetsInputValues(9, 0.5, 8, 9),
+        0: SetsInputValues(0, 0.5),
+        1: SetsInputValues(1, 0.5),
+        2: SetsInputValues(2, 0.5),
+        3: SetsInputValues(3, 0.5),
+        4: SetsInputValues(4, 0.5),
+        5: SetsInputValues(5, 0.5),
+        6: SetsInputValues(6, 0.5),
+        7: SetsInputValues(7, 0.5),
+        8: SetsInputValues(8, 0.5),
+        9: SetsInputValues(9, 0.5)
     }
 
 
