@@ -206,4 +206,4 @@ def classify(img, cfg: FuzzyConfiguration):
     for res in results:
         choosen_num = max(res, choosen_num, key=lambda a: a[0])
     
-    return choosen_num 
+    return choosen_num[1] 

@@ -1,6 +1,6 @@
 import numpy as np
-from dataset.image_generation import train_dataset
-from fuzzy.features import extract_fuzzy_features
+from src.dataset.image_generation import train_dataset
+from src.fuzzy.features import extract_fuzzy_features
 
 
 (x_train, y_labels) = train_dataset(10000)
