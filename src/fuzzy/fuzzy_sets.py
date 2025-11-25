@@ -34,16 +34,17 @@ class FuzzySet:
         self.mf_values = {}
         self.mf_params = {}
         for name, set_val in self.sets_values.items():
-            v = FuzzyValues.from_string(name)
-            self.mf_values[v] = self.membership_function(
+            self.mf_values[name] = self.membership_function(
                 value,
                 set_val.center,
                 set_val.variance
             )
-            self.mf_params[v] = set_val
+            self.mf_params[name] = set_val
 
     
     def get_upper_bound(self, value: FuzzyValues):
+        if value == FuzzyValues.IRRELEVANT:
+            return None
         return self.mf_values[value]
 
     

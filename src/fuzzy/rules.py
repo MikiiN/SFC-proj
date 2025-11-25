@@ -47,12 +47,14 @@ class Rule:
             v_symmetry,
             holes
         ]
-        result = centroid.get_upper_bound(self.conditions[0])
+        result = 9999
         for (set, value) in zip(set_list, self.conditions):
-            result = min(
-                set.get_upper_bound(value),
-                result
-            )
+            v = set.get_upper_bound(value)
+            if v != None:
+                result = min(
+                    v,
+                    result
+                )
         return (result, self.result_number)
 
     

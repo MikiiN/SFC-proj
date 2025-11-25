@@ -1,11 +1,11 @@
 import cv2
 import numpy as np
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from skimage.measure import label, regionprops
 
 IMG_SIZE = 28
 THRESHOLD = 128
-
+MAX_INTENSITY = 255
 
 @dataclass
 class Features:
@@ -18,21 +18,43 @@ class Features:
     holes: int = 0
 
 
-def _centroids(img, props) -> float:
-    cy, _ = props.centroid
-    return cy / img.shape[0] 
+def _crop_image(img) -> np.array:
+    mask = img > 0
+    if not mask.any():
+        return img
+    coords = np.argwhere(mask)
+    y0, x0 = coords.min(axis=0)
+    y1, x1 = coords.max(axis=0) + 1
+    return img[y0:y1, x0:x1]
 
 
-def _aspect_ratio(props) -> float:
-    min_r, min_c, max_r, max_c = props.bbox
-    height = max_r - min_r
-    width = max_c - min_c
-    return width / height if height > 0 else 0
+def _centroids(img) -> float:
+    cropped = _crop_image(img)
+    total_mass = np.sum(cropped)
+    if total_mass == 0:
+        return 14.0
+    height, width = cropped.shape
+    _, y_grid = np.meshgrid(np.arange(width), np.arange(height))
+    moment = np.sum(y_grid * cropped)
+    return (moment / total_mass) / height
+
+
+def _aspect_ratio(img) -> float:
+    rows, cols = np.nonzero(img)
+    if len(rows) == 0:
+        return 0.0
+    height = np.max(rows) - np.min(rows) + 1
+    width = np.max(cols) - np.min(cols) + 1
+    return width/height
 
 
 def _symmetry(img) -> tuple[float, float]:
-    h_sym = 1 - np.mean(np.abs(img - np.fliplr(img)))  # left-right symmetry
-    v_sym = 1 - np.mean(np.abs(img - np.flipud(img)))  # top-bottom symmetry
+    total_intensity = np.sum(img)
+    if total_intensity == 0:
+        return (0, 0)
+    
+    h_sym = 1 - np.sum(np.abs(img - np.fliplr(img))) / (2*total_intensity)  # left-right symmetry
+    v_sym = 1 - np.sum(np.abs(img - np.flipud(img))) / (2*total_intensity) # top-bottom symmetry
     return (h_sym, v_sym)
 
 
@@ -44,6 +66,7 @@ def _solidity(regions) -> float:
 
 
 def _holes(img) -> int:
+    img = MAX_INTENSITY - img
     # Find connected components
     num_labels, labels = cv2.connectedComponents(img)
 
@@ -62,6 +85,8 @@ def extract_fuzzy_features(img) -> Features:
     features = Features()
     features.holes = _holes(img)
     features.horizontal_symmetry, features.vertical_symmetry = _symmetry(img) 
+    features.aspect_ratio = _aspect_ratio(img)
+    features.centroid = _centroids(img)
     
     binary_img = np.array(img > THRESHOLD, dtype=np.uint8)
     labeled_img = label(binary_img)
@@ -73,8 +98,6 @@ def extract_fuzzy_features(img) -> Features:
     
     props = regions[0] # Take the first region found
     
-    features.centroid = _centroids(binary_img, props)
-    features.aspect_ratio = _aspect_ratio(props)
     features.extent = props.extent
     features.solidity = _solidity(regions)
     

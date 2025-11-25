@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, astuple
 
 from src.fuzzy.features import extract_fuzzy_features
 import src.fuzzy.fuzzy_sets as fsets
@@ -44,12 +44,6 @@ class FuzzyConfiguration:
     v_symmetry_medium_variance: float
     v_symmetry_high_center: float
     v_symmetry_high_variance: float
-    holes_low_center: float
-    holes_low_variance: float
-    holes_medium_center: float
-    holes_medium_variance: float
-    holes_high_center: float
-    holes_high_variance: float
     rule_zero_cfg: list
     rule_one_cfg: list
     rule_two_cfg: list
@@ -62,6 +56,15 @@ class FuzzyConfiguration:
     rule_nine_cfg: list
 
 
+    def __list__(self):
+        return list(astuple(self))
+    
+
+    @classmethod
+    def from_list(cls, value_list):
+        return cls(*value_list)
+
+
 
 def classify(img, cfg: FuzzyConfiguration):
     features = extract_fuzzy_features(img)
@@ -71,7 +74,7 @@ def classify(img, cfg: FuzzyConfiguration):
         features.centroid,
         {
             FuzzyValues.LOW: SetsInputValues(
-                cfg.centroid_low_center, cfg.holes_low_variance
+                cfg.centroid_low_center, cfg.centroid_low_variance
             ),
             FuzzyValues.MEDIUM: SetsInputValues(
                 cfg.centroid_medium_center, cfg.centroid_medium_variance
@@ -163,20 +166,7 @@ def classify(img, cfg: FuzzyConfiguration):
     )
     sets.append(v_symmetry)
 
-    holes = fsets.HolesSet(
-        features.holes,
-        {
-            FuzzyValues.LOW: SetsInputValues(
-                cfg.holes_low_center, cfg.holes_low_variance
-            ),
-            FuzzyValues.MEDIUM: SetsInputValues(
-                cfg.holes_medium_center, cfg.holes_medium_variance
-            ),
-            FuzzyValues.HIGH: SetsInputValues(
-                cfg.holes_high_center, cfg.holes_high_variance
-            ),
-        }
-    )
+    holes = fsets.HolesSet(features.holes)
     sets.append(holes)
 
     rule_zero = Rule.from_list(cfg.rule_zero_cfg)
@@ -202,8 +192,8 @@ def classify(img, cfg: FuzzyConfiguration):
     results.append(rule_eight.eval(*sets))
     results.append(rule_nine.eval(*sets))
 
-    choosen_num = results[0]
+    chosen_num = results[0]
     for res in results:
-        choosen_num = max(res, choosen_num, key=lambda a: a[0])
+        chosen_num = max(res, chosen_num, key=lambda a: a[0])
     
-    return choosen_num[1] 
+    return chosen_num[1] 
