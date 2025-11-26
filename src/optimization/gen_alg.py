@@ -65,8 +65,8 @@ class Chromosome:
         cfg1: FuzzyConfiguration, 
         cfg2: FuzzyConfiguration
     ):
-        cfg1_list = list(cfg1)
-        cfg2_list = list(cfg2)
+        cfg1_list = cfg1.to_list()
+        cfg2_list = cfg2.to_list()
         first_list = []
         second_list = []
         flip = True
@@ -75,16 +75,35 @@ class Chromosome:
                 c1, c2 = self._combine_rule_lists(x, y)
                 first_list.append(c1)
                 second_list.append(c2)
-            if flip:
-                first_list.append(x)
-                second_list.append(y)
             else:
-                first_list.append(y)
-                second_list.append(x)
+                if flip:
+                    first_list.append(x)
+                    second_list.append(y)
+                else:
+                    first_list.append(y)
+                    second_list.append(x)
             flip = not flip
         first = FuzzyConfiguration.from_list(first_list)
         second = FuzzyConfiguration.from_list(second_list)
         return first, second
+
+
+    def _mutate_value(self, value):
+        chance = random.randint(0, 20)
+        if chance == 5:
+            return value + 0.01
+        if chance == 6:
+            return value - 0.01
+        return value
+    
+
+    def _mutate_condition(self, condition):
+        chance = random.randint(0, 10)
+        if chance == 5:
+            condition += 1
+            if condition > 2:
+                condition = -1
+        return condition
 
 
     def breed(self, other):
@@ -104,14 +123,34 @@ class Population:
         return self.chromosomes[:num]
     
 
-    def run_eval(self, images, labels, num_breeding = 24):
-        if num_breeding % 2 != 0:
-            raise("Can't breed odd number of chromosomes")
+    def run_eval(self, images, labels):
         for chromosome in self.chromosomes:
             chromosome.evaluate(images, labels)
-        best = self.get_bests(num_breeding)[0]
-        print(f"Best accuracy in cycle: {best.accuracy}")
+        best = self.get_bests()[0]
+        print(f"    Best accuracy in generation: {best.accuracy}")
 
+    
+    def breed(self, num_breeding):
+        if num_breeding % 2 != 0:
+            raise("Can't breed odd number of chromosomes")
+        bests = self.get_bests(num_breeding)
+        i = 0
+        children = [] 
+        while i < len(bests):
+            first = bests[i]
+            second = bests[i+1]
+            child1, child2 = first.breed(second)
+            children.append(child1)
+            children.append(child2)
+            i += 2
+        return children
+
+
+    def replace(self, new_chromosomes: list[Chromosome]):
+        self.chromosomes.sort(key=lambda x: x.eval)
+        self.chromosomes.reverse()
+        self.chromosomes = self.chromosomes[:-len(new_chromosomes)]
+        self.chromosomes.extend(new_chromosomes)
 
 
 
@@ -123,17 +162,21 @@ def gen_correct_params_config():
         *gen_correct_solidity_params(),
         *gen_correct_h_sym_params(),
         *gen_correct_v_sym_params(),
-        *gen_random_rules()
+        *gen_correct_rules()
     )
 
 
-def make_init_population(count = 50):
+def make_init_population(count):
     population = [
         Chromosome(gen_correct_params_config()) for _ in range(count)
     ]
     return Population(population)
 
 
-def optimize(images, labels, population_size = 50, breeding_size = 24):
+def optimize(images, labels, population_size = 100, breeding_size = 60):
     population = make_init_population(population_size)
-    population.run_eval(images, labels, breeding_size)
+    for i in range(500):
+        print(f"Iteration {i}:")
+        population.run_eval(images, labels)
+        children = population.breed(breeding_size)
+        population.replace(children)

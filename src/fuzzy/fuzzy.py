@@ -56,7 +56,7 @@ class FuzzyConfiguration:
     rule_nine_cfg: list
 
 
-    def __list__(self):
+    def to_list(self):
         return list(astuple(self))
     
 

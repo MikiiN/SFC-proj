@@ -86,7 +86,7 @@ class Rule:
         string += str(self.result_number)
     
 
-    def __list__(self):
+    def to_list(self):
         result = []
         for condition in self.conditions:
             result.append(condition.value)
