@@ -13,7 +13,7 @@ class Simulator:
             cold_water_temperature: float = 10.0,
             lower_pressure_chance: float = 0.1,
             lower_pressure: float = 0.6,
-            buffer_size: int = 2,
+            buffer_size: int = 3,
             start_fault_time: int = None,
             end_fault_time: int = None
     ):

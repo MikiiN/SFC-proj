@@ -21,6 +21,7 @@ def append_limits(rule, hot_limits: dict, cold_limits: dict):
     return hot_limits, cold_limits
 
 
+
 def fuzzification(
         current_temperature_error, 
         current_flow_error,
@@ -29,7 +30,8 @@ def fuzzification(
         flow_precise_variance = 0.5,
         flow_approximate_variance = 1.0,
         change_precise_variance = 0.05,
-        change_approximate_variance = 0.1
+        change_approximate_variance = 0.1,
+        rules: list[tuple[ValveChangeValues, ValveChangeValues]] = [] 
     ):
     temp_set = ErrorTempSet(
         current_temperature_error,
@@ -46,8 +48,7 @@ def fuzzification(
 
     # if temperature is PB and flow is ZE then hot_valve is NB and cold_valve is PB 
     rule0 = eval_rule(
-        ValveChangeValues.NEGATIVE_BIG,
-        ValveChangeValues.POSITIVE_BIG,
+        rules[0][0], rules[0][1],
         temp_set.mf_values[ErrorTempValues.POSITIVE_BIG],
         flow_set.mf_values[ErrorFlowValues.ZERO]
     )
@@ -55,8 +56,7 @@ def fuzzification(
 
     # if temperature is PS and flow is ZE then hot_valve is NS and cold_valve is PS
     rule1 = eval_rule(
-        ValveChangeValues.NEGATIVE_SMALL,
-        ValveChangeValues.POSITIVE_SMALL,
+        *rules[1],
         temp_set.mf_values[ErrorTempValues.POSITIVE_SMALL],
         flow_set.mf_values[ErrorFlowValues.ZERO]
     )
@@ -64,8 +64,7 @@ def fuzzification(
 
     # if temperature is ZE and flow is ZE then hot_valve is ZE and cold_valve is ZE
     rule2 = eval_rule(
-        ValveChangeValues.ZERO,
-        ValveChangeValues.ZERO,
+        *rules[2],
         temp_set.mf_values[ErrorTempValues.ZERO],
         flow_set.mf_values[ErrorFlowValues.ZERO]
     )
@@ -73,8 +72,7 @@ def fuzzification(
 
     # if temperature is NS and flow is ZE then hot_valve is PS and cold_valve is NS
     rule3 = eval_rule(
-        ValveChangeValues.POSITIVE_SMALL,
-        ValveChangeValues.NEGATIVE_SMALL,
+        *rules[3],
         temp_set.mf_values[ErrorTempValues.NEGATIVE_SMALL],
         flow_set.mf_values[ErrorFlowValues.ZERO]
     )
@@ -82,8 +80,7 @@ def fuzzification(
 
     # if temperature is NB and flow is N then hot_valve is PB and cold_valve is NB
     rule4 = eval_rule(
-        ValveChangeValues.POSITIVE_BIG,
-        ValveChangeValues.NEGATIVE_BIG,
+        *rules[4],
         temp_set.mf_values[ErrorTempValues.NEGATIVE_BIG],
         flow_set.mf_values[ErrorFlowValues.ZERO]
     )
@@ -91,8 +88,7 @@ def fuzzification(
 
     # if temperature is PB and flow is N then hot_valve is NS and cold_valve is PB 
     rule5 = eval_rule(
-        ValveChangeValues.NEGATIVE_SMALL,
-        ValveChangeValues.POSITIVE_BIG,
+        *rules[5],
         temp_set.mf_values[ErrorTempValues.POSITIVE_BIG],
         flow_set.mf_values[ErrorFlowValues.NEGATIVE]
     )
@@ -100,8 +96,7 @@ def fuzzification(
 
     # if temperature is PS and flow is N then hot_valve is ZE and cold_valve is PB
     rule6 = eval_rule(
-        ValveChangeValues.ZERO,
-        ValveChangeValues.POSITIVE_BIG,
+        *rules[6],
         temp_set.mf_values[ErrorTempValues.POSITIVE_SMALL],
         flow_set.mf_values[ErrorFlowValues.NEGATIVE]
     )
@@ -109,8 +104,7 @@ def fuzzification(
 
     # if temperature is ZE and flow is N then hot_valve is ZE and cold_valve is ZE
     rule7 = eval_rule(
-        ValveChangeValues.POSITIVE_SMALL,
-        ValveChangeValues.POSITIVE_SMALL,
+        *rules[7],
         temp_set.mf_values[ErrorTempValues.ZERO],
         flow_set.mf_values[ErrorFlowValues.NEGATIVE]
     )
@@ -118,8 +112,7 @@ def fuzzification(
 
     # if temperature is NS and flow is N then hot_valve is PS and cold_valve is ZE
     rule8 = eval_rule(
-        ValveChangeValues.POSITIVE_BIG,
-        ValveChangeValues.ZERO,
+        *rules[8],
         temp_set.mf_values[ErrorTempValues.NEGATIVE_SMALL],
         flow_set.mf_values[ErrorFlowValues.NEGATIVE]
     )
@@ -127,8 +120,7 @@ def fuzzification(
 
     # if temperature is NB and flow is N then hot_valve is PB and cold_valve is NS
     rule9 = eval_rule(
-        ValveChangeValues.POSITIVE_BIG,
-        ValveChangeValues.NEGATIVE_SMALL,
+        *rules[9],
         temp_set.mf_values[ErrorTempValues.NEGATIVE_BIG],
         flow_set.mf_values[ErrorFlowValues.NEGATIVE]
     )
@@ -136,8 +128,7 @@ def fuzzification(
 
     # if temperature is PB and flow is P then hot_valve is NB and cold_valve is PS 
     rule10 = eval_rule(
-        ValveChangeValues.NEGATIVE_BIG,
-        ValveChangeValues.POSITIVE_SMALL,
+        *rules[10],
         temp_set.mf_values[ErrorTempValues.POSITIVE_BIG],
         flow_set.mf_values[ErrorFlowValues.POSITIVE]
     )
@@ -145,8 +136,7 @@ def fuzzification(
 
     # if temperature is PS and flow is P then hot_valve is NB and cold_valve is ZE
     rule11 = eval_rule(
-        ValveChangeValues.NEGATIVE_BIG,
-        ValveChangeValues.ZERO,
+        *rules[11],
         temp_set.mf_values[ErrorTempValues.POSITIVE_SMALL],
         flow_set.mf_values[ErrorFlowValues.POSITIVE]
     )
@@ -154,8 +144,7 @@ def fuzzification(
 
     # if temperature is ZE and flow is P then hot_valve is PS and cold_valve is PS
     rule12 = eval_rule(
-        ValveChangeValues.POSITIVE_SMALL,
-        ValveChangeValues.POSITIVE_SMALL,
+        *rules[12],
         temp_set.mf_values[ErrorTempValues.ZERO],
         flow_set.mf_values[ErrorFlowValues.POSITIVE]
     )
@@ -163,8 +152,7 @@ def fuzzification(
 
     # if temperature is NS and flow is P then hot_valve is ZE and cold_valve is NB
     rule13 = eval_rule(
-        ValveChangeValues.ZERO,
-        ValveChangeValues.NEGATIVE_BIG,
+        *rules[13],
         temp_set.mf_values[ErrorTempValues.NEGATIVE_SMALL],
         flow_set.mf_values[ErrorFlowValues.POSITIVE]
     )
@@ -172,11 +160,24 @@ def fuzzification(
 
     # if temperature is NB and flow is P then hot_valve is PS and cold_valve is NB
     rule14 = eval_rule(
-        ValveChangeValues.POSITIVE_SMALL,
-        ValveChangeValues.NEGATIVE_BIG,
+        *rules[14],
         temp_set.mf_values[ErrorTempValues.NEGATIVE_BIG],
         flow_set.mf_values[ErrorFlowValues.POSITIVE]
     )
+    hot_limits = {
+        ValveChangeValues.NEGATIVE_BIG : [0.0],
+        ValveChangeValues.NEGATIVE_SMALL : [0.0],
+        ValveChangeValues.ZERO : [0.0],
+        ValveChangeValues.POSITIVE_SMALL : [0.0],
+        ValveChangeValues.POSITIVE_BIG : [0.0]
+    }
+    cold_limits = {
+        ValveChangeValues.NEGATIVE_BIG : [0.0],
+        ValveChangeValues.NEGATIVE_SMALL : [0.0],
+        ValveChangeValues.ZERO : [0.0],
+        ValveChangeValues.POSITIVE_SMALL : [0.0],
+        ValveChangeValues.POSITIVE_BIG : [0.0]
+    }
     hot_limits, cold_limits = append_limits(rule14, hot_limits, cold_limits)
 
     hot_change_set = ValveChangeSet(
@@ -206,4 +207,5 @@ def defuzzification(change_set: ValveChangeSet):
     for w in np.arange(ValveChangeValues.NEGATIVE_BIG.value, ValveChangeValues.POSITIVE_BIG.value, 0.01):
         sum_vals += w * change_set.mf_result(w)
         sum_weights += change_set.mf_result(w)
-    return sum_vals/sum_weights
+
+    return sum_vals/(sum_weights+0.0001)
