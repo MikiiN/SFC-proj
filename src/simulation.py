@@ -13,7 +13,7 @@ class Simulator:
             cold_water_temperature: float = 10.0,
             lower_pressure_chance: float = 0.1,
             lower_pressure: float = 0.6,
-            buffer_size: int = 3,
+            buffer_size: int = 2,
             start_fault_time: int = None,
             end_fault_time: int = None
     ):
@@ -35,9 +35,9 @@ class Simulator:
 
     def step(self, time, hot_valve = None, cold_valve = None):
         if hot_valve != None:
-            self.hot_valve = hot_valve
+            self.hot_valve = min(max(hot_valve, self.CLOSED_VALVE), self.OPENED_VALVE)
         if cold_valve != None:
-            self.cold_valve = cold_valve
+            self.cold_valve = min(max(cold_valve, self.CLOSED_VALVE), self.OPENED_VALVE)
 
         if self.hot_valve == self.CLOSED_VALVE and self.cold_valve == self.CLOSED_VALVE:
             return 0.0, 0.0

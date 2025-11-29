@@ -10,18 +10,18 @@ class ErrorTempValues(enum.Enum):
 
 
 class ErrorFlowValues(enum.Enum):
-    NEGATIVE = -1.0
+    NEGATIVE = -0.5
     ZERO = 0
-    POSITIVE = 1.0
+    POSITIVE = 0.5
 
 
 
 class ValveChangeValues(enum.Enum):
-    NEGATIVE_BIG = -0.15
-    NEGATIVE_SMALL = -0.05
+    NEGATIVE_BIG = -0.05
+    NEGATIVE_SMALL = -0.02
     ZERO = 0
-    POSITIVE_SMALL = 0.05
-    POSITIVE_BIG = 0.15
+    POSITIVE_SMALL = 0.02
+    POSITIVE_BIG = 0.05
 
 
 
@@ -206,9 +206,8 @@ class ValveChangeSet:
 
 
     def mf_negative_big(self, value):
-        v = max(ValveChangeValues.NEGATIVE_BIG.value, value)
         res = self.triangle_function(
-            v,
+            value,
             ValveChangeValues.NEGATIVE_BIG.value,
             self.approximate_variance,
             self.approximate_variance
@@ -247,9 +246,8 @@ class ValveChangeSet:
 
 
     def mf_positive_big(self, value):
-        v = min(ValveChangeValues.POSITIVE_BIG.value, value)
         res = self.triangle_function(
-            v,
+            value,
             ValveChangeValues.POSITIVE_BIG.value,
             self.approximate_variance,
             self.approximate_variance
