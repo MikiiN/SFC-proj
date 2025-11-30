@@ -21,7 +21,7 @@ def append_limits(rule, hot_limits: dict, cold_limits: dict):
     return hot_limits, cold_limits
 
 
-DEFAULT_RULES = [
+REFERENCE_RULES = [
     (ValveChangeValues.NEGATIVE_BIG, ValveChangeValues.POSITIVE_BIG), # RULE0
     (ValveChangeValues.NEGATIVE_SMALL, ValveChangeValues.POSITIVE_SMALL), # RULE 1
     (ValveChangeValues.ZERO, ValveChangeValues.ZERO), # RULE 2
@@ -49,7 +49,7 @@ def fuzzification(
         flow_approximate_variance = 1.0,
         change_precise_variance = 0.1,
         change_approximate_variance = 0.5,
-        rules: list[tuple[ValveChangeValues, ValveChangeValues]] = DEFAULT_RULES 
+        rules: list[tuple[ValveChangeValues, ValveChangeValues]] = REFERENCE_RULES 
     ):
     temp_set = ErrorTempSet(
         current_temperature_error,

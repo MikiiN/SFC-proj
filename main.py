@@ -1,70 +1,45 @@
-from src.fuzzy import fuzzification, defuzzification
-from src.simulation import Simulator
-from src.generic_algorithm import Population
+from src.fuzzy import REFERENCE_RULES
+from src.fuzzy_set import generate_random_rules
+from src.generic_algorithm import Population, Chromosome
+from PySide6.QtWidgets import QApplication
+from src.gui import ShowerWindow 
+import sys
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-o", "--optimize", action="store_true", required=False, help="Run GA optimization and print best configuration")
+parser.add_argument("-l", "--load", required=False, type=str, help="Load file with rule configurations")
+parser.add_argument("-r", "--random", required=False, action="store_true", help="Use random rule configurations")
+
+args = parser.parse_args()
 
 
-WANTED_FLOW = 0.8
-WANTED_TEMP = 38.0
-
-# sim = Simulator()
-# flow, temp = sim.step(0, 0.5, 0.5)
-# error_flow = flow - WANTED_FLOW
-# error_temp = temp - WANTED_TEMP
-
-# hot, cold = fuzzification(error_temp, error_flow)
-# hot_change = defuzzification(hot)
-# cold_change = defuzzification(cold)
-# print(hot_change, cold_change)
-
-
-def test_rules(rules = None):
-    hot_valve = 0.2
-    cold_valve = 0.4
-    temperatures = []
-    flows = []
-    sim = Simulator(start_fault_time=40, end_fault_time=50)
-    for t in range(100):
-        current_flow, current_temp = sim.step(t, hot_valve, cold_valve)
-        error_temp = current_temp - WANTED_TEMP
-        error_flow = current_flow - WANTED_FLOW
-        if rules != None:
-            hot_set, cold_set = fuzzification(
-                error_temp,
-                error_flow,
-                rules = rules
-            )
-        else:
-            hot_set, cold_set = fuzzification(
-                error_temp,
-                error_flow
-            )
-        hot_change = defuzzification(hot_set)
-        cold_change = defuzzification(cold_set)
-
-        hot_valve += hot_change
-        cold_valve += cold_change
-        temperatures.append(float(current_temp))
-        flows.append(float(current_flow))
-    return temperatures, flows
-
-
-pop = Population(40)
-best = pop.run(50, True)
-print(best[1].rules)
-
-# results_def = test_rules()
-results_opt = test_rules(best[1].rules)
-
-# print(results_def[0])
-# print(results_def[1])
-print(results_opt[0])
-print(results_opt[1])
-
-
-# import argparse
-
-# parser = argparse.ArgumentParser()
-# parser.add_argument("-o", "--optimize", action="store_true", required=False)
-# parser.add_argument("-l", "--load", required=False)
-
-# args = parser.parse_args()
+if args.optimize:
+    population = Population(100)
+    best = population.run(500, True)
+    print(best[1].to_string())
+elif args.load:
+    rules = []
+    try:
+        with open(args.load, "r") as f:
+            input_string = f.read().strip()
+            c = Chromosome.from_string(input_string)
+            rules = c.rules
+    except FileNotFoundError:
+        print(f"Error: File {args.load} does not exists")
+    except ValueError:
+        print(f"Error: invalid input")
+    app = QApplication(sys.argv)
+    win = ShowerWindow(rules)
+    win.show()
+    sys.exit(app.exec())
+elif args.random:
+    app = QApplication(sys.argv)
+    win = ShowerWindow(generate_random_rules())
+    win.show()
+    sys.exit(app.exec())
+else:
+    app = QApplication(sys.argv)
+    win = ShowerWindow(REFERENCE_RULES)
+    win.show()
+    sys.exit(app.exec())

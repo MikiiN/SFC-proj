@@ -1,4 +1,5 @@
 import enum 
+import random
 
 class ErrorTempValues(enum.Enum):
     NEGATIVE_BIG = -15.0
@@ -253,3 +254,20 @@ class ValveChangeSet:
             self.approximate_variance
         ) 
         return min(self.limits[ValveChangeValues.POSITIVE_BIG], res)
+    
+
+
+def generate_random_rules():
+    rules = []
+    values = [
+        ValveChangeValues.NEGATIVE_BIG,
+        ValveChangeValues.NEGATIVE_SMALL,
+        ValveChangeValues.ZERO,
+        ValveChangeValues.POSITIVE_SMALL,
+        ValveChangeValues.POSITIVE_BIG
+    ]
+    for _ in range(15):
+        rules.append((
+            random.sample(values, 1)[0], random.sample(values, 1)[0]
+        ))
+    return rules

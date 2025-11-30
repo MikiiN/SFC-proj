@@ -22,6 +22,27 @@ class Chromosome:
             rules_list.append((rule[0].value, rule[1].value))
         return rules_list
     
+    
+    def to_string(self):
+        string = ""
+        for rule in self.rules:
+            string += f"{rule[0].value} {rule[1].value} "
+        return string[:-1]
+
+
+    @classmethod
+    def from_string(cls, rule_string: str):
+        tokens = rule_string.split(" ")
+        if len(tokens) % 2 != 0:
+            raise ValueError("Invalid input")
+        rules = []
+        iterator = iter(tokens)
+        for token_a, token_b in zip(iterator, iterator):
+            obj_a = ValveChangeValues(float(token_a))
+            obj_b = ValveChangeValues(float(token_b))
+            rules.append((obj_a, obj_b))
+        return cls(rules)
+
 
     @classmethod
     def from_list(cls, rule_list: list[tuple[float, float]]):
@@ -56,11 +77,11 @@ class Chromosome:
             hot_valve = max(0.0, min(hot_valve+hot_change, 1.0))
             cold_valve = max(0.0, min(cold_valve+cold_change, 1.0))
             
-            total_error += (abs(error_flow)*10) + abs(error_temp)
-            if current_temp > 45.0:
-                total_error += 10 * current_temp
+            total_error += (abs(error_flow)*20) + (abs(error_temp))
+            if current_temp > 44.5:
+                total_error += 200 * current_temp
             if current_flow < 0.05:
-                total_error += 5000.0
+                total_error += 10000.0
         
         return (10000.0 / (total_error+1.0)) 
 
@@ -95,14 +116,14 @@ class Chromosome:
         new1 = []
         new2 = []
         for first, second in zip(self.rules, other.rules):
-            if random.random() < 0.2:
+            if random.random() < 0.3:
                 new1.append((self.mutate(first[0]), self.mutate(second[1])))
             else:    
                 new1.append((first[0], second[1]))
-            if random.random() < 0.2:
-                new2.append((second[0], first[1]))
-            else:
+            if random.random() < 0.3:
                 new2.append((self.mutate(second[0]), self.mutate(first[1])))
+            else:
+                new2.append((second[0], first[1]))
         
         return self.__class__(new1), self.__class__(new2)
     
@@ -138,7 +159,8 @@ class Population:
 
     def run(self, num_of_generations = 30, is_printing = False):
         best = None
-        for gen in range(num_of_generations):
+        gen = 0
+        while gen < num_of_generations:
             score = []
             for indiv in self.population:
                 score.append((indiv.get_score(), indiv))
@@ -147,10 +169,15 @@ class Population:
             if is_printing and not (gen % 5):
                 print(f"Generation {gen}: best fitness {best[0]:.4f}")
 
+            if gen == num_of_generations-1:
+                if is_printing:
+                    print(f"Generation {gen}: best fitness {best[0]:.4f}")
+                return best
+
             new_population = [score[0][1], score[1][1]]
             for _ in range(self.population_size-2):
-                parent1 = max(random.sample(score, 3), key=lambda x:x[0])[1]
-                parent2 = max(random.sample(score, 3), key=lambda x:x[0])[1]
+                parent1 = max(random.sample(score, 5), key=lambda x:x[0])[1]
+                parent2 = max(random.sample(score, 5), key=lambda x:x[0])[1]
                 child1, child2 = parent1.breed(parent2)
                 if random.random() < 0.5:
                     new_population.append(child1)
@@ -158,4 +185,4 @@ class Population:
                     new_population.append(child2)
 
             self.population = new_population
-        return best
+            gen += 1

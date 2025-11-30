@@ -27,6 +27,7 @@ class Simulator:
         self.water_buffer = [self.INIT_WATER_TEMPERATURE] * buffer_size
         self.start_fault_time = start_fault_time
         self.end_fault_time = end_fault_time
+        self.fault_counter = 0
 
 
     def _check_valve(self, valve_value):
@@ -42,10 +43,9 @@ class Simulator:
         if self.hot_valve == self.CLOSED_VALVE and self.cold_valve == self.CLOSED_VALVE:
             return 0.0, 0.0
         
-        percentage_chance = int(self.lower_pressure_chance * 100)
         if self.start_fault_time == None:
-            fault = random.randint(0, 100) in range(percentage_chance)
-            cold_flow = self.cold_valve * (self.lower_pressure if fault else self.NORMAL_PRESSURE)
+            cold_flow = self.cold_valve * (self.lower_pressure if self.fault_counter > 0 else self.NORMAL_PRESSURE)
+            self.fault_counter -= 1
         else:
             cold_flow = self.cold_valve * (
                 self.lower_pressure if time >= self.start_fault_time and time <= self.end_fault_time else self.NORMAL_PRESSURE
@@ -55,3 +55,7 @@ class Simulator:
         new_flow = hot_flow + cold_flow
         self.water_buffer.append(new_temp)
         return new_flow, self.water_buffer.pop(0)
+
+
+    def init_fault(self):
+        self.fault_counter = 20
