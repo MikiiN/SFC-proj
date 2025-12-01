@@ -1,14 +1,23 @@
+#############################################################################
+#
+#   file: gui.py
+#   author: Michal Zatecka
+#   date: 01.12.2025
+#
+#############################################################################
+
+
 import collections
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, 
-                               QHBoxLayout, QLabel, QPushButton, QSlider, 
-                               QGroupBox, QFrame)
+                            QHBoxLayout, QLabel, QPushButton, QSlider, 
+                            QGroupBox, QFrame)
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from src.simulation import Simulator
 from src.fuzzy import fuzzification, defuzzification
+from src.simulation import Simulator
 
 
 class ShowerWindow(QMainWindow):
@@ -99,7 +108,7 @@ class ShowerWindow(QMainWindow):
         # 3. Flush (System fault)
         btn_flush = QPushButton("SPLÁCHNOUT")
         btn_flush.setMinimumHeight(50)
-        btn_flush.setStyleSheet("background-color: #ff9800; color: white; font-weight: bold; font-size: 14px;")
+        btn_flush.setStyleSheet("background-color: #0048ff; color: white; font-weight: bold; font-size: 14px;")
         btn_flush.clicked.connect(self.sim.init_fault)
         vbox.addWidget(btn_flush)
 
@@ -118,7 +127,7 @@ class ShowerWindow(QMainWindow):
         self.ax2 = self.canvas.figure.add_subplot(212)
         # temperature graph
         self.ax1.set_title("Teplota vody (°C)")
-        self.ax1.set_ylim(10, 70)
+        self.ax1.set_ylim(10, 80)
         self.ax1.grid(True, linestyle='--', alpha=0.6)
         self.line_t, = self.ax1.plot([], [], 'r-', lw=2, label="Aktuální")
         self.line_target_t, = self.ax1.plot([], [], 'g--', lw=1.5, label="Cíl")
@@ -126,7 +135,7 @@ class ShowerWindow(QMainWindow):
 
         # flow graph
         self.ax2.set_title("Průtok (l/min)")
-        self.ax2.set_ylim(0, 2.5)
+        self.ax2.set_ylim(-0.5, 2.5)
         self.ax2.grid(True, linestyle='--', alpha=0.6)
         self.line_f, = self.ax2.plot([], [], 'b-', lw=2, label="Aktuální")
         self.line_target_f, = self.ax2.plot([], [], 'g--', lw=1.5, label="Cíl")

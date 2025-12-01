@@ -1,5 +1,15 @@
+#############################################################################
+#
+#   file: fuzzy_set.py
+#   author: Michal Zatecka
+#   date: 01.12.2025
+#
+#############################################################################
+
+
 import enum 
 import random
+
 
 class ErrorTempValues(enum.Enum):
     NEGATIVE_BIG = -15.0
@@ -18,14 +28,15 @@ class ErrorFlowValues(enum.Enum):
 
 
 class ValveChangeValues(enum.Enum):
-    NEGATIVE_BIG = -0.05
-    NEGATIVE_SMALL = -0.02
+    NEGATIVE_BIG = -0.03
+    NEGATIVE_SMALL = -0.01
     ZERO = 0
-    POSITIVE_SMALL = 0.02
-    POSITIVE_BIG = 0.05
+    POSITIVE_SMALL = 0.01
+    POSITIVE_BIG = 0.03
 
 
 
+# parent class for fuzzy sets
 class FuzzySet:
     def __init__(
             self, 
@@ -45,6 +56,7 @@ class FuzzySet:
         left: float,
         right: float
     ) -> float:
+       # triangle membership function
        lower_bound = center - left
        upper_bound = center + right
        rising = (value - lower_bound) / (center - lower_bound)
@@ -60,6 +72,7 @@ class ErrorTempSet(FuzzySet):
             approximate_variance = 10.0
     ):
         super().__init__(value, precise_variance, approximate_variance)
+        # precalculate values
         self.mf_values = {
             ErrorTempValues.NEGATIVE_BIG : self.mf_negative_big(),
             ErrorTempValues.NEGATIVE_SMALL : self.mf_negative_small(),
@@ -124,6 +137,7 @@ class ErrorFlowSet(FuzzySet):
             approximate_variance = 1.0
     ):
         super().__init__(value, precise_variance, approximate_variance)
+        # precalculate values
         self.mf_values = {
             ErrorFlowValues.NEGATIVE : self.mf_negative(),
             ErrorFlowValues.ZERO : self.mf_zero(),
@@ -162,8 +176,9 @@ class ErrorFlowSet(FuzzySet):
 
 
 class ValveChangeSet:
+    # fuzzy set for result valve change
     def __init__(self, 
-            precise_variance = 0.05, 
+            precise_variance = 0.02, 
             approximate_variance = 0.1,
             negative_big_limits = [-1.0],
             negative_small_limits = [-1.0],

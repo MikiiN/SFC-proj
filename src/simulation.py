@@ -1,4 +1,10 @@
-import random
+#############################################################################
+#
+#   file: simulation.py
+#   author: Michal Zatecka
+#   date: 01.12.2025
+#
+#############################################################################
 
 
 class Simulator:
@@ -30,11 +36,8 @@ class Simulator:
         self.fault_counter = 0
 
 
-    def _check_valve(self, valve_value):
-        return valve_value >= self.CLOSED_VALVE and valve_value <= self.OPENED_VALVE
-
-
     def step(self, time, hot_valve = None, cold_valve = None):
+        # ensure valves correct setting
         if hot_valve != None:
             self.hot_valve = min(max(hot_valve, self.CLOSED_VALVE), self.OPENED_VALVE)
         if cold_valve != None:
@@ -43,17 +46,20 @@ class Simulator:
         if self.hot_valve == self.CLOSED_VALVE and self.cold_valve == self.CLOSED_VALVE:
             return 0.0, 0.0
         
+        # fault control
         if self.start_fault_time == None:
             cold_flow = self.cold_valve * (self.lower_pressure if self.fault_counter > 0 else self.NORMAL_PRESSURE)
-            self.fault_counter -= 1
+            self.fault_counter = max(self.fault_counter-1, 0)
         else:
             cold_flow = self.cold_valve * (
                 self.lower_pressure if time >= self.start_fault_time and time <= self.end_fault_time else self.NORMAL_PRESSURE
             )
+        
+        # simulation calculation
         hot_flow = self.hot_valve * self.NORMAL_PRESSURE
         new_temp = (cold_flow*self.cold_water_temp + hot_flow*self.hot_water_temp) / (cold_flow + hot_flow)
         new_flow = hot_flow + cold_flow
-        self.water_buffer.append(new_temp)
+        self.water_buffer.append(new_temp) # delay
         return new_flow, self.water_buffer.pop(0)
 
 
