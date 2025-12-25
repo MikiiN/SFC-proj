@@ -1,7 +1,7 @@
 # Fuzzy shower
 This project was created for Soft computing course at FIT VUT.
 
-Given theme was *Hybrid Genetic algoritm and fuzzy system* application. So I made fuzzy system for controlling shower valves to reach temperature and flow requested by user with fuzzy rules optimization using Genetic algorithm. For easier testing was implemented shower simulator with GUI.
+Given theme was *Hybrid Genetic algoritm and fuzzy system* application. So I made a fuzzy system for controlling shower valves to reach temperature and flow requested by user with fuzzy rules optimization using Genetic algorithm. For easier testing was implemented shower simulator with GUI.
 
 ## Instalation
 For running this application you need to have python 3.12 (tested on) and venv installed. Following commands (in other sections too) are for linux. 
